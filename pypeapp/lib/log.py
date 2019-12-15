@@ -14,6 +14,7 @@ Best place for it is in ``repos/pype-config/environments/global.json``
 
 import logging
 import os
+import inspect
 import datetime
 import time
 import datetime as dt
@@ -257,8 +258,11 @@ class PypeMongoFormatter(logging.Formatter):
         return document
 
 
-class PypeLogger:
-
+class PypeLogger(logging.Logger):
+    deprecated_msg = (
+        "You're using deprecated logging getter. Please do not use"
+        " `get_logger`from `PypeLogger` but default `logging` module. <{}>"
+    )
     PYPE_DEBUG = 0
 
     DFT = '%(levelname)s >>> { %(name)s }: [ %(message)s ] '
@@ -276,8 +280,31 @@ class PypeLogger:
         logging.CRITICAL: CRI,
     }
 
-    def __init__(self):
-        self.PYPE_DEBUG = int(os.environ.get("PYPE_DEBUG", "0"))
+    def __init__(self, name="__main__", level=logging.NOTSET):
+        super(PypeLogger, self).__init__(name, level)
+        if "ftrack_api" in name or name == "urllib3.connectionpool":
+            self.setLevel(logging.WARNING)
+
+        elif level == logging.NOTSET:
+            self.PYPE_DEBUG = int(os.environ.get("PYPE_DEBUG", "0"))
+            if self.PYPE_DEBUG > 1:
+                self.setLevel(logging.DEBUG)
+            else:
+                self.setLevel(logging.INFO)
+
+        if len(self.handlers) > 0:
+            for handler in self.handlers:
+                if (not isinstance(handler, MongoHandler)
+                   and not isinstance(handler, PypeStreamHandler)):
+                    if os.environ.get('PYPE_LOG_MONGO_HOST') and _mongo_logging:  # noqa
+                        self.addHandler(self._get_mongo_handler())
+                        pass
+                    self.addHandler(self._get_console_handler())
+        else:
+            if os.environ.get('PYPE_LOG_MONGO_HOST') and _mongo_logging:
+                self.addHandler(self._get_mongo_handler())
+                pass
+            self.addHandler(self._get_console_handler())
 
     @staticmethod
     def get_file_path(host='pype'):
@@ -334,25 +361,9 @@ class PypeLogger:
         return console_handler
 
     def get_logger(self, name=None, host=None):
-        logger = logging.getLogger(name or '__main__')
+        self.name = name
+        self.warning(self.deprecated_msg.format(inspect.stack()[1][1]))
+        return self
 
-        if self.PYPE_DEBUG > 1:
-            logger.setLevel(logging.DEBUG)
-        else:
-            logger.setLevel(logging.INFO)
 
-        if len(logger.handlers) > 0:
-            for handler in logger.handlers:
-                if (not isinstance(handler, MongoHandler)
-                   and not isinstance(handler, PypeStreamHandler)):
-                    if os.environ.get('PYPE_LOG_MONGO_HOST') and _mongo_logging:  # noqa
-                        logger.addHandler(self._get_mongo_handler())
-                        pass
-                    logger.addHandler(self._get_console_handler())
-        else:
-            if os.environ.get('PYPE_LOG_MONGO_HOST') and _mongo_logging:
-                logger.addHandler(self._get_mongo_handler())
-                pass
-            logger.addHandler(self._get_console_handler())
-
-        return logger
+logging.setLoggerClass(PypeLogger)
