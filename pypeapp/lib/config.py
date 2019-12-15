@@ -1,8 +1,8 @@
 import os
 import json
-from .log import PypeLogger
+import logging
 
-log = PypeLogger().get_logger(__name__)
+log = logging.getLogger(__name__)
 
 
 def load_json(fpath, first_run=False):

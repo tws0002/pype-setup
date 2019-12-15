@@ -23,9 +23,9 @@ import tarfile
 import zipfile
 import shutil
 import hashlib
+import logging
 from six.moves.urllib.request import urlopen
 
-from pypeapp import Logger
 from pypeapp.lib.Terminal import Terminal
 
 
@@ -37,7 +37,7 @@ class DeployException(Exception):
 
     def __init__(self, message, code=0):
         super().__init__(message)
-        log = Logger().get_logger('deployment')
+        log = logging.getLogger('deployment')
         self._code = code
         log.error(message)
 
@@ -55,7 +55,7 @@ class Deployment(object):
     _deploy_file = 'deploy.json'
     _schema_file = 'deploy_schema-1.0.json'
     _pype_root = None
-    _log = Logger().get_logger()
+    _log = logging.getLogger()
 
     def __init__(self, pype_root: str):
         """ Init deployment object

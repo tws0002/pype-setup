@@ -1,7 +1,8 @@
 import os
 import sys
 import time
-from pypeapp import style, Logger
+import logging
+from pypeapp import style
 from Qt import QtCore, QtGui, QtWidgets, QtSvg
 from pypeapp.lib.config import get_presets
 from pypeapp.resources import get_resource
@@ -66,7 +67,7 @@ class TrayManager:
     def __init__(self, tray_widget, main_window):
         self.tray_widget = tray_widget
         self.main_window = main_window
-        self.log = Logger().get_logger(self.__class__.__name__)
+        self.log = logging.getLogger(self.__class__.__name__)
 
         self.icon_run = QtGui.QIcon(get_resource('circle_green.png'))
         self.icon_stay = QtGui.QIcon(get_resource('circle_orange.png'))

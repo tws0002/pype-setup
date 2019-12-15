@@ -16,7 +16,7 @@
 import os
 from pathlib import Path
 import sys
-from pypeapp import Logger
+import logging
 import json
 import jsonschema
 
@@ -56,7 +56,7 @@ class Storage:
 
     _prefix = 'PYPE'
     _config = None
-    _log = Logger().get_logger()
+    _log = logging.getLogger()
 
     def __init__(self, storage=None):
         """ class constructor.

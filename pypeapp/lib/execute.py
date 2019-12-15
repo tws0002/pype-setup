@@ -1,6 +1,6 @@
 import subprocess
 import os
-from .log import PypeLogger as Logger
+import logging
 
 
 def execute(args,
@@ -31,7 +31,7 @@ def execute(args,
 
     log_levels = ['DEBUG:', 'INFO:', 'ERROR:', 'WARNING:', 'CRITICAL:']
 
-    log = Logger().get_logger('execute')
+    log = logging.getLogger('execute')
     log.info("Executing ({})".format(" ".join(args)))
     popen = subprocess.Popen(
         args,
